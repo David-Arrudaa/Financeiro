@@ -1,35 +1,79 @@
 import { useState } from "react";
 import { supabase } from "../../services/supabase";
+import {
+  FileText,
+  DollarSign,
+  Tags,
+  Calendar,
+  DivideCircle,
+  CheckCircle2,
+  AlertCircle,
+  MessageSquare,
+  Loader2,
+} from "lucide-react";
+import "./TransactionForm.css";
 
 export default function TransactionForm() {
   const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
+  const [observation, setObservation] = useState("");
+  const [displayAmount, setDisplayAmount] = useState("");
+  const [rawAmount, setRawAmount] = useState(0);
   const [expenseGroup, setExpenseGroup] = useState("boleto");
 
-  // Data única (usada quando NÃO é parcelado)
   const [dueDate, setDueDate] = useState("");
-
-  // Controles de parcelamento
   const [isInstallment, setIsInstallment] = useState(false);
   const [installmentsCount, setInstallmentsCount] = useState("");
-  // Novo estado: um array (lista) para guardar a data de CADA parcela separadamente
   const [installmentDates, setInstallmentDates] = useState([]);
 
-  // Função inteligente que cria as "caixinhas" de data conforme você digita o número de parcelas
+  // Estado para controlar o carregamento e evitar cliques duplos
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "success",
+  });
+
+  const showModal = (title, message, type = "success") => {
+    setModalConfig({ isOpen: true, title, message, type });
+  };
+
+  const closeModal = () => {
+    setModalConfig({ ...modalConfig, isOpen: false });
+  };
+
+  const handleAmountChange = (e) => {
+    let value = e.target.value.replace(/\D/g, "");
+
+    if (!value) {
+      setDisplayAmount("");
+      setRawAmount(0);
+      return;
+    }
+
+    const numericValue = Number(value) / 100;
+    setRawAmount(numericValue);
+
+    const formatted = numericValue.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    setDisplayAmount(formatted);
+  };
+
   const handleInstallmentsChange = (e) => {
     const count = parseInt(e.target.value) || 0;
     setInstallmentsCount(e.target.value);
 
     const newDates = [...installmentDates];
-    // Se você aumentou o número, ele cria mais campos vazios
     while (newDates.length < count) {
       newDates.push("");
     }
-    // Salva exatamente a quantidade de datas que você pediu
     setInstallmentDates(newDates.slice(0, count));
   };
 
-  // Função que atualiza a data de uma parcela específica
   const handleDateChange = (index, value) => {
     const newDates = [...installmentDates];
     newDates[index] = value;
@@ -38,37 +82,38 @@ export default function TransactionForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true); // Ativa o estado de carregamento
 
     try {
-      const totalAmount = parseFloat(amount);
+      const totalAmount = rawAmount;
       const transactionsToInsert = [];
 
       if (isInstallment && installmentsCount > 1) {
-        // LÓGICA PARA COMPRA PARCELADA
         const parcels = parseInt(installmentsCount);
         const parcelValue = totalAmount / parcels;
 
         for (let i = 0; i < parcels; i++) {
-          // Trava de segurança: impede salvar se esquecer de preencher alguma data
           if (!installmentDates[i]) {
-            alert(
+            showModal(
+              "Atenção",
               `Por favor, selecione a data de vencimento da Parcela ${i + 1}.`,
+              "error",
             );
+            setIsSubmitting(false);
             return;
           }
-
           transactionsToInsert.push({
             description: `${description} (Parcela ${i + 1}/${parcels})`,
             amount: parcelValue,
             type: "saida",
-            due_date: installmentDates[i], // Pega a data exata que você escolheu para esta parcela
+            due_date: installmentDates[i],
             payment_date: null,
             status: "pendente",
             expense_group: expenseGroup,
+            observation: observation || null,
           });
         }
       } else {
-        // LÓGICA PARA COMPRA ÚNICA (Sem parcelamento)
         transactionsToInsert.push({
           description: description,
           amount: totalAmount,
@@ -77,182 +122,193 @@ export default function TransactionForm() {
           payment_date: null,
           status: "pendente",
           expense_group: expenseGroup,
+          observation: observation || null,
         });
       }
 
-      // Manda tudo para o Supabase (seja 1 ou 30 registros, ele salva de uma vez)
       const { error } = await supabase
         .from("fin_transactions")
         .insert(transactionsToInsert);
-
       if (error) throw error;
 
-      alert("Lançamento registrado com sucesso!");
+      showModal(
+        "Sucesso!",
+        "Lançamento registrado com sucesso no sistema.",
+        "success",
+      );
 
-      // Limpa os campos após o sucesso
       setDescription("");
-      setAmount("");
+      setObservation("");
+      setDisplayAmount("");
+      setRawAmount(0);
       setDueDate("");
       setIsInstallment(false);
       setInstallmentsCount("");
       setInstallmentDates([]);
     } catch (error) {
       console.error("Erro ao salvar:", error.message);
-      alert("Erro ao salvar o lançamento.");
+      showModal(
+        "Erro",
+        "Ocorreu um erro ao salvar o lançamento. Tente novamente.",
+        "error",
+      );
+    } finally {
+      setIsSubmitting(false); // Desativa o carregamento ao terminar (com sucesso ou erro)
     }
   };
 
   return (
-    <div
-      style={{
-        border: "1px solid #334155",
-        padding: "20px",
-        borderRadius: "8px",
-        backgroundColor: "#1e293b",
-        color: "#fff",
-      }}
-    >
-      <h3 style={{ marginTop: 0, color: "#38bdf8" }}>
-        Novo Lançamento de Despesa
-      </h3>
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "15px" }}
-      >
-        <input
-          type="text"
-          placeholder="Descrição (ex: Nota Fiscal Rolemar)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-          style={{ padding: "10px", borderRadius: "5px", border: "none" }}
-        />
+    <div className="form-container">
+      <div className="form-header">
+        <h3 className="form-title">Novo Lançamento</h3>
+        <p className="form-subtitle">
+          Registre uma nova despesa ou documento a pagar no sistema.
+        </p>
+      </div>
 
-        <input
-          type="number"
-          placeholder="Valor Total da Compra (R$)"
-          step="0.01"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          required
-          style={{ padding: "10px", borderRadius: "5px", border: "none" }}
-        />
+      <form onSubmit={handleSubmit} className="transaction-form">
+        <div className="form-row">
+          <div className="input-group">
+            <label className="input-label">Descrição da Despesa</label>
+            <div className="input-wrapper">
+              <FileText size={18} className="input-icon" />
+              <input
+                type="text"
+                placeholder="Ex: Nota Fiscal Rolemar"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                disabled={isSubmitting}
+                className="input-default"
+              />
+            </div>
+          </div>
 
-        <select
-          value={expenseGroup}
-          onChange={(e) => setExpenseGroup(e.target.value)}
-          style={{
-            padding: "10px",
-            borderRadius: "5px",
-            border: "2px solid #ef4444",
-            backgroundColor: "#fee2e2",
-            color: "#991b1b",
-            fontWeight: "bold",
-          }}
-        >
-          <option value="boleto">Destino: Boleto (Fornecedores / Peças)</option>
-          <option value="oficina">
-            Destino: Conta da Oficina (Água, Luz, Aluguel, Funcionários)
-          </option>
-        </select>
+          <div className="input-group">
+            <label className="input-label">Observação (Opcional)</label>
+            <div className="input-wrapper">
+              <MessageSquare size={18} className="input-icon" />
+              <input
+                type="text"
+                placeholder="Ex: Nota 12345 / Peças p/ suspensão"
+                value={observation}
+                onChange={(e) => setObservation(e.target.value)}
+                disabled={isSubmitting}
+                className="input-default"
+              />
+            </div>
+          </div>
+        </div>
 
-        {/* --- ÁREA DE PARCELAMENTO --- */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            backgroundColor: "#334155",
-            padding: "10px",
-            borderRadius: "5px",
-          }}
-        >
+        <div className="form-row">
+          <div className="input-group">
+            <label className="input-label">Valor Total (R$)</label>
+            <div className="input-wrapper">
+              <DollarSign size={18} className="input-icon" />
+              <input
+                type="text"
+                placeholder="0,00"
+                value={displayAmount}
+                onChange={handleAmountChange}
+                required
+                disabled={isSubmitting}
+                className="input-default"
+              />
+            </div>
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">Categoria de Despesa</label>
+            <div className="input-wrapper">
+              <Tags size={18} className="input-icon" />
+              <select
+                value={expenseGroup}
+                onChange={(e) => setExpenseGroup(e.target.value)}
+                disabled={isSubmitting}
+                className="input-default"
+                style={{ cursor: "pointer" }}
+              >
+                <option value="boleto">Boletos (Fornecedores / Peças)</option>
+                <option value="oficina">
+                  Contas da Oficina (Água, Luz, Folha)
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="checkbox-card">
           <input
             type="checkbox"
             id="parcelado"
             checked={isInstallment}
             onChange={(e) => setIsInstallment(e.target.checked)}
-            style={{ width: "18px", height: "18px", cursor: "pointer" }}
+            disabled={isSubmitting}
+            className="checkbox-input"
           />
-          <label
-            htmlFor="parcelado"
-            style={{ cursor: "pointer", fontWeight: "bold" }}
-          >
-            Compra Parcelada?
+          <label htmlFor="parcelado" className="checkbox-label">
+            Dividir esta conta em múltiplas parcelas?
           </label>
         </div>
 
         {isInstallment && (
-          <input
-            type="number"
-            placeholder="Em quantas vezes?"
-            min="2"
-            max="120"
-            value={installmentsCount}
-            onChange={handleInstallmentsChange} // Chama nossa nova função aqui
-            required={isInstallment}
-            style={{
-              padding: "10px",
-              borderRadius: "5px",
-              border: "2px solid #38bdf8",
-              backgroundColor: "#0f172a",
-              color: "#fff",
-            }}
-          />
+          <div className="input-group">
+            <label className="input-label">Quantidade de Parcelas</label>
+            <div className="input-wrapper">
+              <DivideCircle size={18} className="input-icon" />
+              <input
+                type="number"
+                placeholder="Ex: 3"
+                min="2"
+                max="120"
+                value={installmentsCount}
+                onChange={handleInstallmentsChange}
+                required={isInstallment}
+                disabled={isSubmitting}
+                className="input-default"
+              />
+            </div>
+          </div>
         )}
 
-        {/* --- EXIBIÇÃO DINÂMICA DAS DATAS --- */}
         {!isInstallment ? (
-          // Se NÃO for parcelado, mostra apenas 1 campo de data comum
-          <>
-            <label style={{ fontSize: "14px", color: "#94a3b8" }}>
-              Data de Vencimento:
-            </label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              required
-              style={{ padding: "10px", borderRadius: "5px", border: "none" }}
-            />
-          </>
+          <div className="input-group">
+            <label className="input-label">Data de Vencimento</label>
+            <div className="input-wrapper">
+              <Calendar size={18} className="input-icon" />
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                required
+                disabled={isSubmitting}
+                className="input-default"
+              />
+            </div>
+          </div>
         ) : (
-          // Se FOR parcelado, desenha um campo de data para cada parcela!
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-              marginTop: "10px",
-            }}
-          >
+          <div className="dynamic-dates-grid">
             {installmentDates.map((date, index) => (
-              <div
-                key={index}
-                style={{ display: "flex", flexDirection: "column", gap: "5px" }}
-              >
-                <label
-                  style={{
-                    fontSize: "14px",
-                    color: "#38bdf8",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Data da Parcela {index + 1}:
+              <div key={index} className="input-group">
+                <label className="input-label" style={{ color: "#059669" }}>
+                  Vencimento {index + 1}ª Parcela
                 </label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => handleDateChange(index, e.target.value)}
-                  required
-                  style={{
-                    padding: "10px",
-                    borderRadius: "5px",
-                    border: "1px solid #334155",
-                    backgroundColor: "#0f172a",
-                    color: "#fff",
-                  }}
-                />
+                <div className="input-wrapper">
+                  <Calendar
+                    size={16}
+                    className="input-icon"
+                    style={{ left: "10px" }}
+                  />
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => handleDateChange(index, e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                    className="input-default"
+                    style={{ paddingLeft: "34px" }}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -260,20 +316,53 @@ export default function TransactionForm() {
 
         <button
           type="submit"
+          className="btn-submit"
+          disabled={isSubmitting}
           style={{
-            padding: "12px",
-            cursor: "pointer",
-            backgroundColor: "#38bdf8",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            fontWeight: "bold",
-            marginTop: "10px",
+            opacity: isSubmitting ? 0.7 : 1,
+            cursor: isSubmitting ? "not-allowed" : "pointer",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "8px",
           }}
         >
-          {isInstallment ? "Salvar Todas as Parcelas" : "Salvar Lançamento"}
+          {isSubmitting ? (
+            <>
+              <Loader2 size={20} className="spinner-animation" />
+              Salvando dados...
+            </>
+          ) : (
+            <>
+              <CheckCircle2 size={20} />
+              {isInstallment
+                ? "Gerar Parcelas e Salvar"
+                : "Registrar Lançamento"}
+            </>
+          )}
         </button>
       </form>
+
+      {modalConfig.isOpen && (
+        <div className="modal-overlay">
+          <div className="modal-box">
+            <div className="modal-icon-wrapper">
+              {modalConfig.type === "success" ? (
+                <CheckCircle2 size={40} className="modal-icon success" />
+              ) : (
+                <AlertCircle size={40} className="modal-icon error" />
+              )}
+            </div>
+
+            <h3 className="modal-title">{modalConfig.title}</h3>
+            <p className="modal-message">{modalConfig.message}</p>
+
+            <button onClick={closeModal} className="modal-btn">
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,111 @@
+/* src/components/Sidebar/Sidebar.css */
+
+.sidebar-container {
+  width: 260px;
+  height: 100vh;
+  background-color: #0f172a;
+  color: #fff;
+  padding: 25px 12px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Empurra o rodapé para o final */
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+.sidebar-logo-container {
+  text-align: center;
+  margin-bottom: 35px;
+  padding: 0 5px;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  color: #f8fafc;
+}
+
+.logo-highlight {
+  color: #dc2626;
+  font-style: italic;
+}
+
+.menu-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+  border-bottom: none;
+}
+
+.menu-item:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+.menu-item-accordion {
+  justify-content: space-between;
+}
+
+.accordion-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.submenu-container {
+  display: flex;
+  flex-direction: column;
+  padding-left: 10px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+  gap: 2px;
+  border-left: 2px solid #1e293b;
+  margin-left: 16px;
+}
+
+.submenu-item {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  background-color: transparent;
+  color: #94a3b8;
+  margin-bottom: 0;
+}
+
+.submenu-item:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+/* Rodapé do Menu Lateral com o Botão Sair */
+.sidebar-footer {
+  border-top: 1px solid #1e293b;
+  padding-top: 15px;
+}
+
+.logout-btn {
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  color: #ef4444; /* Vermelho sutil para destacar a ação de saída */
+}
+
+.logout-btn:hover {
+  background-color: #7f1d1d33;
+  color: #f87171;
+}

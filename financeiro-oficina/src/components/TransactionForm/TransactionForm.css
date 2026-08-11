@@ -1,0 +1,273 @@
+/* src/components/TransactionForm/TransactionForm.css */
+
+.form-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-top: 5px solid #111827;
+  padding: 22px 30px;
+  border-radius: 12px;
+  color: #1e293b;
+  box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.05);
+  max-width: 750px;
+  margin: 10px auto;
+}
+
+.form-header {
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+}
+
+.form-title {
+  margin: 0;
+  color: #111827;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.025em; /* Letras levemente mais compactas para elegância */
+}
+
+.form-subtitle {
+  margin: 4px 0 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+  font-weight: 400;
+}
+
+.transaction-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: #d97706;
+  pointer-events: none;
+}
+
+.input-default {
+  width: 100%;
+  padding: 10px 14px 10px 42px;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: "Inter", sans-serif; /* Garante que usa a fonte moderna */
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.input-default:focus {
+  outline: none;
+  border-color: #dc2626;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.input-default::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-card:hover {
+  border-color: #d97706;
+  background: #fffbeb;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #dc2626;
+}
+
+.checkbox-label {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #1f2937;
+  user-select: none;
+}
+
+.dynamic-dates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1.5px dashed #d97706;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.btn-submit {
+  padding: 13px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-family: "Inter", sans-serif;
+  margin-top: 4px;
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 15px -3px rgba(220, 38, 38, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.025em;
+  border-bottom: 3px solid #b45309;
+}
+
+.btn-submit:hover {
+  box-shadow: 0 8px 20px -3px rgba(220, 38, 38, 0.45);
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+/* Estilos do Modal Personalizado de Alerta */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-box {
+  background-color: #ffffff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 400px;
+  padding: 30px 25px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: modalScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleUp {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-icon-wrapper {
+  margin-bottom: 15px;
+}
+
+.modal-icon.success {
+  color: #059669;
+}
+
+.modal-icon.error {
+  color: #dc2626;
+}
+
+.modal-title {
+  margin: 0 0 8px 0;
+  color: #0f172a;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.modal-message {
+  margin: 0 0 25px 0;
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.modal-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.modal-btn:hover {
+  background-color: #1e293b;
+}
+
+/* Animação do ícone de carregamento */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-animation {
+  animation: spin 1s linear infinite;
+}
